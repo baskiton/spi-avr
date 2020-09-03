@@ -1,0 +1,26 @@
+{
+    "name": "SPI",
+    "version": "1.0.0",
+    "description": "This library allows communication with SPI devices.",
+    "keywords": "avr, baskiton, spi",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/baskiton/spi-avr.git"
+    },
+    "authors":
+    [
+        {
+            "name": "Alexander Baskikh",
+            "email": "baskiton@mail.ru",
+            "url": "https://t.me/baskiton",
+            "maintainer": true
+        }
+    ],
+    "license": "MIT",
+    "frameworks": ["arduino"],
+    "platforms": ["atmelavr"],
+    "dependencies": {
+        "defines": ">=1.0.0"
+    }
+}

@@ -1,0 +1,338 @@
+#include <avr/io.h>
+#include <stdint.h>
+#include <stddef.h>
+
+#include <defines.h>
+#include "spi.h"
+
+
+/*!
+ * @brief Initialize Hardware SPI sequence
+ */
+void spi_init(void) {
+    uint8_t sreg = SREG;
+    cli();  // Protect from a scheduler
+
+    // set ~SS as output and HIGH (deselect)
+    set_output(DDRB, SPI_SS);
+    bit_set(PORTB, SPI_SS);
+    
+    // Warning: if the SS pin ever becomes a LOW INPUT then SPI
+    // automatically switches to Slave, so the data direction of
+    // the SS pin MUST be kept as OUTPUT.
+    bit_set(SPCR, MSTR);     // set SPI master
+    bit_set(SPCR, SPE);      // SPI enable
+
+    // set  MOSI and SCK output; MISO automaticly input
+    // By doing this AFTER enabling SPI, we avoid accidentally
+    // clocking in a single bit since the lines go directly
+    // from "input" to SPI control.
+    set_output(DDRB, SPI_MOSI);
+    set_output(DDRB, SPI_SCK);
+
+    // set SPI speed
+    // SPCR |= (1 << SPR1) | (1 << SPR0);  // most slow speed
+    bit_clear(SPCR, SPR1);
+    bit_clear(SPCR, SPR0);
+    bit_set(SPSR, SPI2X);    // set speed x2
+
+    SREG = sreg;
+}
+
+/*!
+ * @brief Sending data from SPI
+ * @param data Send 8-bit data
+ */
+inline void spi_write(uint8_t data) {
+    SPDR = data;
+    /* The following NOP introduces a small delay that can prevent the wait
+     * loop form iterating when running at the maximum speed. This gives
+     * about 10% more speed, even if it seems counter-intuitive. At lower
+     * speeds it is unnoticed.
+     */
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+}
+
+/*!
+ * @brief Sending data from SPI
+ * @param data Send 16-bit data
+ */
+inline void spi_write16(uint16_t data) {
+    union {
+        uint16_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t msb;
+        };
+    } in = {data};
+
+    SPDR = in.msb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+
+    SPDR = in.lsb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+}
+
+/*!
+ * @brief Sending data from SPI
+ * @param data Send 24-bit data
+ */
+inline void spi_write24(uint32_t data) {
+    union {
+        uint32_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t lmsb;
+            uint8_t mlsb;
+            uint8_t msb;
+        };
+    } in = {data};
+    
+    SPDR = in.mlsb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    
+    SPDR = in.lmsb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+
+    SPDR = in.lsb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+}
+
+/*!
+ * @brief Sending data from SPI
+ * @param data Send 32-bit data
+ */
+inline void spi_write32(uint32_t data) {
+    union {
+        uint32_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t lmsb;
+            uint8_t mlsb;
+            uint8_t msb;
+        };
+    } in = {data};
+    
+    SPDR = in.msb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    
+    SPDR = in.mlsb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    
+    SPDR = in.lmsb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+
+    SPDR = in.lsb;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+}
+
+/*!
+ * @brief Sending data sequence from SPI
+ * @param buf Data sequence to send
+ * @param count Number of bytes in \c buf to send
+ */
+inline void spi_write_buf(void *buf, size_t count) {
+    if (count == 0) return;
+
+    uint8_t *ptr = (uint8_t*)buf;
+    for (int i = 0; i < count; i++) {
+        SPDR = *ptr++;
+        nop();
+        loop_until_bit_is_set(SPSR, SPIF);
+    }
+}
+
+/*!
+ * @brief Sending data from SPI with precheck for available
+ * @param data Send 8-bit data
+ */
+inline void spi_write_precheck(uint8_t data) {
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = data;
+}
+
+/*!
+ * @brief Sending data from SPI with precheck for available
+ * @param data Send 16-bit data
+ */
+inline void spi_write16_precheck(uint16_t data) {
+    union {
+        uint16_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t msb;
+        };
+    } in = {data};
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = in.msb;
+
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = in.lsb;
+}
+
+/*!
+ * @brief Sending data from SPI without check for available
+ * @param data Send 8-bit data
+ */
+inline void spi_write_no_check(uint8_t data) {
+    SPDR = data;
+}
+
+/*!
+ * @brief Sending data from SPI without check for available
+ * @param data Send 16-bit data
+ */
+inline void spi_write16_no_check(uint16_t data) {
+    union {
+        uint16_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t msb;
+        };
+    } in = {data};
+    SPDR = in.msb;
+
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = in.lsb;
+}
+
+/*!
+ * @brief Read 8-bit data from SPI
+ * @return 8-bit data
+ */
+inline uint8_t spi_read_8(void) {
+    uint8_t result;
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result = SPDR;
+
+    return result;
+}
+
+/*!
+ * @brief Read 16-bit data from SPI
+ * @return 16-bit data
+ */
+inline uint16_t spi_read_16(void) {
+    union {
+        uint32_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t msb;
+        };
+    } result;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.msb = SPDR;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.lsb = SPDR;
+
+    return result.val;
+}
+
+/*!
+ * @brief Read 24-bit data from SPI
+ * @return 24-bit data
+ */
+inline uint32_t spi_read_24(void) {
+    union {
+        uint32_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t lmsb;
+            uint8_t mlsb;
+            uint8_t msb;
+        };
+    } result;
+
+    result.msb = 0;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.mlsb = SPDR;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.lmsb = SPDR;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.lsb = SPDR;
+
+    return result.val;
+}
+
+/*!
+ * @brief Read 32-bit data from SPI
+ * @return 32-bit data
+ */
+inline uint32_t spi_read_32(void) {
+    union {
+        uint32_t val;
+        struct {
+            uint8_t lsb;
+            uint8_t lmsb;
+            uint8_t mlsb;
+            uint8_t msb;
+        };
+    } result;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.msb = SPDR;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.mlsb = SPDR;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.lmsb = SPDR;
+
+    SPDR = 0;
+    nop();
+    loop_until_bit_is_set(SPSR, SPIF);
+    result.lsb = SPDR;
+
+    return result.val;
+}
+
+/*!
+ * @brief Read data from SPI
+ * @param buf Data buffer to write recieving data
+ * @param count Number of bytes to read
+ * @return Recieving data return in to the buf
+ */
+inline void spi_read_buf(void *buf, size_t count) {
+    if (count == 0) return;
+
+    uint8_t *ptr = (uint8_t*)buf;
+    for (int i = 0; i < count; i++) {
+        SPDR = 0;
+        nop();
+        loop_until_bit_is_set(SPSR, SPIF);
+        *ptr++ = SPDR;
+    }
+}
