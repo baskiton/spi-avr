@@ -1,6 +1,6 @@
 {
     "name": "SPI",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "This library allows communication with SPI devices.",
     "keywords": "avr, baskiton, spi",
     "repository":
@@ -21,6 +21,6 @@
     "frameworks": ["arduino"],
     "platforms": ["atmelavr"],
     "dependencies": {
-        "defines": ">=1.0.0"
+        "defines": "^1.0.0"
     }
 }

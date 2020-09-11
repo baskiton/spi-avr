@@ -13,30 +13,59 @@ void spi_init(void) {
     uint8_t sreg = SREG;
     cli();  // Protect from a scheduler
 
-    // set ~SS as output and HIGH (deselect)
+    /* Set ~SS as output and HIGH (deselect) */
     set_output(DDRB, SPI_SS);
     bit_set(PORTB, SPI_SS);
     
-    // Warning: if the SS pin ever becomes a LOW INPUT then SPI
-    // automatically switches to Slave, so the data direction of
-    // the SS pin MUST be kept as OUTPUT.
+    /* Warning: if the SS pin ever becomes a LOW INPUT then SPI
+    automatically switches to Slave, so the data direction of
+    the SS pin MUST be kept as OUTPUT.
+    */
     bit_set(SPCR, MSTR);     // set SPI master
     bit_set(SPCR, SPE);      // SPI enable
 
-    // set  MOSI and SCK output; MISO automaticly input
-    // By doing this AFTER enabling SPI, we avoid accidentally
-    // clocking in a single bit since the lines go directly
-    // from "input" to SPI control.
+    /* Set  MOSI and SCK output; MISO automaticly input
+    By doing this AFTER enabling SPI, we avoid accidentally
+    clocking in a single bit since the lines go directly
+    from "input" to SPI control.
+    */
     set_output(DDRB, SPI_MOSI);
     set_output(DDRB, SPI_SCK);
 
-    // set SPI speed
-    // SPCR |= (1 << SPR1) | (1 << SPR0);  // most slow speed
+    /* set SPI max speed */
     bit_clear(SPCR, SPR1);
     bit_clear(SPCR, SPR0);
-    bit_set(SPSR, SPI2X);    // set speed x2
+    bit_set(SPSR, SPI2X);
 
     SREG = sreg;
+}
+
+/*!
+ * @brief Set SPI speed
+ * @param freq Target SPI frequency.
+ */
+void spi_set_speed(uint32_t freq) {
+    uint32_t tmp = (F_CPU / 2);
+    uint8_t c_div = 0;
+    while ((c_div < 6) && (tmp > freq)) {
+        tmp /= 2;
+        c_div++;
+    }
+    if (c_div == 6)
+        c_div = 7;
+    /*
+    c_div is clock divider:
+    0 - \c F_CPU / 2;
+    1 - \c F_CPU / 4;
+    2 - \c F_CPU / 8;
+    3 - \c F_CPU / 16;
+    4 - \c F_CPU / 32;
+    5 - \c F_CPU / 64;
+    6 - \c F_CPU / 128;
+    */
+    bit_write(SPSR, SPI2X, ~(c_div & 0b001));
+    bit_write(SPCR, SPR0, c_div & 0b010);
+    bit_write(SPCR, SPR1, c_div & 0b100);
 }
 
 /*!
@@ -321,9 +350,9 @@ inline uint32_t spi_read_32(void) {
 
 /*!
  * @brief Read data from SPI
- * @param buf Data buffer to write recieving data
+ * @param buf Data buffer to write receiving data
  * @param count Number of bytes to read
- * @return Recieving data return in to the buf
+ * @return Receiving data return in to the buf
  */
 inline void spi_read_buf(void *buf, size_t count) {
     if (count == 0) return;

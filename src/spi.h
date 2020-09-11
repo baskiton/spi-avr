@@ -18,8 +18,15 @@
 /* SPI Disable */
 #define spi_off() (bit_clear(SPCR, SPE))
 
+/* One SPI Clock pulse */
+inline void spi_pulse(void) {
+    bit_set(PORTB, SPI_SCK);
+    nop();
+    bit_clear(PORTB, SPI_SCK);
+}
 
 extern void spi_init(void);
+extern void spi_set_speed(uint32_t freq);
 
 extern void spi_write(uint8_t data);
 extern void spi_write16(uint16_t data);
