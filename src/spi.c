@@ -168,12 +168,12 @@ inline void spi_write32(uint32_t data) {
 /*!
  * @brief Sending data sequence from SPI
  * @param buf Data sequence to send
- * @param count Number of bytes in \c buf to send
+ * @param count Number of bytes in \p buf to send
  */
-inline void spi_write_buf(void *buf, size_t count) {
+inline void spi_write_buf(uint8_t *buf, uint16_t count) {
     if (count == 0) return;
 
-    uint8_t *ptr = (uint8_t*)buf;
+    uint8_t *ptr = buf;
     for (int i = 0; i < count; i++) {
         SPDR = *ptr++;
         nop();
@@ -352,13 +352,13 @@ inline uint32_t spi_read_32(void) {
  * @brief Read data from SPI
  * @param buf Data buffer to write receiving data
  * @param count Number of bytes to read
- * @return Receiving data return in to the buf
+ * @return Receiving data return in to the \p buf
  */
-inline void spi_read_buf(void *buf, size_t count) {
+inline void spi_read_buf(uint8_t *buf, uint16_t count) {
     if (count == 0) return;
 
-    uint8_t *ptr = (uint8_t*)buf;
-    for (int i = 0; i < count; i++) {
+    uint8_t *ptr = buf;
+    for (uint16_t i = 0; i < count; i++) {
         SPDR = 0;
         nop();
         loop_until_bit_is_set(SPSR, SPIF);
