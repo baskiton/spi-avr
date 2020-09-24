@@ -21,6 +21,6 @@
     "frameworks": ["arduino"],
     "platforms": ["atmelavr"],
     "dependencies": {
-        "defines": "^1.0.0"
+        "defines-avr": "^1.0.0"
     }
 }
