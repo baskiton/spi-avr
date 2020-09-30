@@ -170,10 +170,10 @@ inline void spi_write32(uint32_t data) {
  * @param buf Data sequence to send
  * @param count Number of bytes in \p buf to send
  */
-inline void spi_write_buf(uint8_t *buf, uint16_t count) {
+inline void spi_write_buf(const uint8_t *buf, uint16_t count) {
     if (count == 0) return;
 
-    uint8_t *ptr = buf;
+    const uint8_t *ptr = buf;
     for (int i = 0; i < count; i++) {
         SPDR = *ptr++;
         nop();

@@ -32,7 +32,7 @@ extern void spi_write(uint8_t data);
 extern void spi_write16(uint16_t data);
 extern void spi_write24(uint32_t data);
 extern void spi_write32(uint32_t data);
-extern void spi_write_buf(uint8_t *buf, uint16_t count);
+extern void spi_write_buf(const uint8_t *buf, uint16_t count);
 
 extern void spi_write_precheck(uint8_t data);
 extern void spi_write16_precheck(uint16_t data);
