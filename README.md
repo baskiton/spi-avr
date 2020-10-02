@@ -7,3 +7,6 @@ This library allows communication with SPI devices.
 * [![GitHub package.json dependency version (subfolder of monorepo)](https://img.shields.io/github/package-json/dependency-version/baskiton/spi-avr/defines-avr?filename=library.json)][def_r]
 
 [def_r]: https://github.com/baskiton/defines-avr
+
+### __ATTENTION__
+_Only for Atmega328p or compatible_
