@@ -1,8 +1,10 @@
 #include <avr/io.h>
+#include <avr/interrupt.h>
+
 #include <stdint.h>
-#include <stddef.h>
 
 #include <defines.h>
+
 #include "spi.h"
 
 
@@ -36,6 +38,9 @@ void spi_init(void) {
     bit_clear(SPCR, SPR1);
     bit_clear(SPCR, SPR0);
     bit_set(SPSR, SPI2X);
+
+    /* clearing SPIF by reading it */
+    bit_is_set(SPSR, SPIF);
 
     SREG = sreg;
 }
@@ -80,7 +85,7 @@ inline void spi_write(uint8_t data) {
      * speeds it is unnoticed.
      */
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
 }
 
 /*!
@@ -98,11 +103,11 @@ inline void spi_write16(uint16_t data) {
 
     SPDR = in.msb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
 
     SPDR = in.lsb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
 }
 
 /*!
@@ -122,15 +127,15 @@ inline void spi_write24(uint32_t data) {
     
     SPDR = in.mlsb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     
     SPDR = in.lmsb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
 
     SPDR = in.lsb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
 }
 
 /*!
@@ -150,19 +155,19 @@ inline void spi_write32(uint32_t data) {
     
     SPDR = in.msb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     
     SPDR = in.mlsb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     
     SPDR = in.lmsb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
 
     SPDR = in.lsb;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
 }
 
 /*!
@@ -177,36 +182,8 @@ inline void spi_write_buf(const uint8_t *buf, uint16_t count) {
     for (int i = 0; i < count; i++) {
         SPDR = *ptr++;
         nop();
-        loop_until_bit_is_set(SPSR, SPIF);
+        while (!(SPSR & _BV(SPIF)));
     }
-}
-
-/*!
- * @brief Sending data from SPI with precheck for available
- * @param data Send 8-bit data
- */
-inline void spi_write_precheck(uint8_t data) {
-    loop_until_bit_is_set(SPSR, SPIF);
-    SPDR = data;
-}
-
-/*!
- * @brief Sending data from SPI with precheck for available
- * @param data Send 16-bit data
- */
-inline void spi_write16_precheck(uint16_t data) {
-    union {
-        uint16_t val;
-        struct {
-            uint8_t lsb;
-            uint8_t msb;
-        };
-    } in = {data};
-    loop_until_bit_is_set(SPSR, SPIF);
-    SPDR = in.msb;
-
-    loop_until_bit_is_set(SPSR, SPIF);
-    SPDR = in.lsb;
 }
 
 /*!
@@ -230,8 +207,7 @@ inline void spi_write16_no_check(uint16_t data) {
         };
     } in = {data};
     SPDR = in.msb;
-
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     SPDR = in.lsb;
 }
 
@@ -243,7 +219,7 @@ inline uint8_t spi_read_8(void) {
     uint8_t result;
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result = SPDR;
 
     return result;
@@ -264,12 +240,12 @@ inline uint16_t spi_read_16(void) {
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.msb = SPDR;
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.lsb = SPDR;
 
     return result.val;
@@ -294,17 +270,17 @@ inline uint32_t spi_read_24(void) {
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.mlsb = SPDR;
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.lmsb = SPDR;
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.lsb = SPDR;
 
     return result.val;
@@ -327,22 +303,22 @@ inline uint32_t spi_read_32(void) {
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.msb = SPDR;
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.mlsb = SPDR;
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.lmsb = SPDR;
 
     SPDR = 0;
     nop();
-    loop_until_bit_is_set(SPSR, SPIF);
+    while (!(SPSR & _BV(SPIF)));
     result.lsb = SPDR;
 
     return result.val;
@@ -361,7 +337,7 @@ inline void spi_read_buf(uint8_t *buf, uint16_t count) {
     for (uint16_t i = 0; i < count; i++) {
         SPDR = 0;
         nop();
-        loop_until_bit_is_set(SPSR, SPIF);
+        while (!(SPSR & _BV(SPIF)));
         *ptr++ = SPDR;
     }
 }

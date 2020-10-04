@@ -2,8 +2,8 @@
 #define SPI_H
 
 #include <avr/io.h>
+
 #include <stdint.h>
-#include <stddef.h>
 
 #include <defines.h>
 
@@ -17,6 +17,13 @@
 
 /* SPI Disable */
 #define spi_off() (bit_clear(SPCR, SPE))
+
+typedef struct spi_device_s {
+    struct avr_pin_s cs;    // chip select
+    struct avr_pin_s rst;   // reset
+    struct avr_pin_s intr;  // interrupt
+    struct avr_pin_s a0;    // a0
+} spi_dev_t;
 
 /* One SPI Clock pulse */
 inline void spi_pulse(void) {
@@ -33,9 +40,6 @@ extern void spi_write16(uint16_t data);
 extern void spi_write24(uint32_t data);
 extern void spi_write32(uint32_t data);
 extern void spi_write_buf(const uint8_t *buf, uint16_t count);
-
-extern void spi_write_precheck(uint8_t data);
-extern void spi_write16_precheck(uint16_t data);
 
 extern void spi_write_no_check(uint8_t data);
 extern void spi_write16_no_check(uint16_t data);
