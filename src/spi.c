@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include <defines.h>
 
@@ -340,4 +341,41 @@ inline void spi_read_buf(uint8_t *buf, uint16_t count) {
         while (!(SPSR & _BV(SPIF)));
         *ptr++ = SPDR;
     }
+}
+
+/*!
+ * @brief Initialize a new SPI device
+ * @param cs_num Chip Select (SS) pin number
+ * @param cs_port Chip Select port pointer
+ * @param rst_num Reset (RST) pin number
+ * @param rst_port Reset port pointer
+ * @param intr_num Interrupt input signal pin number
+ * @param intr_port Interrupt input signal port pointer
+ * @param a0_num Advanced pin number
+ * @param a0_port Advanced port pointer
+ */
+void spi_device_init(spi_dev_t *spi_dev,
+                     uint8_t cs_num, volatile uint8_t *cs_port,
+                     uint8_t rst_num, volatile uint8_t *rst_port,
+                     uint8_t intr_num, volatile uint8_t *intr_port,
+                     uint8_t a0_num, volatile uint8_t *a0_port) {
+    spi_dev->cs.pin_num = cs_num;
+    spi_dev->cs.port = cs_port;
+    spi_dev->rst.pin_num = rst_num;
+    spi_dev->rst.port = rst_port;
+    spi_dev->intr.pin_num = intr_num;
+    spi_dev->intr.port = intr_port;
+    spi_dev->a0.pin_num = a0_num;
+    spi_dev->a0.port = a0_port;
+
+    chip_desel(spi_dev->cs);
+
+    if (!cs_port)
+        set_output(*(cs_port - 1), cs_num);
+    if (!rst_port)
+        set_output(*(rst_port - 1), rst_num);
+    if (!intr_port)
+        set_input(*(intr_port - 1), intr_num);
+    if (!a0_port)
+        set_output(*(a0_port - 1), a0_num);
 }

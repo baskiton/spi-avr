@@ -18,6 +18,11 @@
 /* SPI Disable */
 #define spi_off() (bit_clear(SPCR, SPE))
 
+/* Select the specific SPI device. CS - spi_dev_t.cs */
+#define chip_select(cs) (bit_clear(*((cs).port), (cs).pin_num))
+/* Deselect the specific SPI device. CS - spi_dev_t.cs */
+#define chip_desel(cs) (bit_set(*((cs).port), (cs).pin_num))
+
 typedef struct spi_device_s {
     struct avr_pin_s cs;    // chip select
     struct avr_pin_s rst;   // reset
@@ -32,22 +37,28 @@ inline void spi_pulse(void) {
     bit_clear(PORTB, SPI_SCK);
 }
 
-extern void spi_init(void);
-extern void spi_set_speed(uint32_t freq);
+void spi_init(void);
+void spi_set_speed(uint32_t freq);
 
-extern void spi_write(uint8_t data);
-extern void spi_write16(uint16_t data);
-extern void spi_write24(uint32_t data);
-extern void spi_write32(uint32_t data);
-extern void spi_write_buf(const uint8_t *buf, uint16_t count);
+void spi_write(uint8_t data);
+void spi_write16(uint16_t data);
+void spi_write24(uint32_t data);
+void spi_write32(uint32_t data);
+void spi_write_buf(const uint8_t *buf, uint16_t count);
 
-extern void spi_write_no_check(uint8_t data);
-extern void spi_write16_no_check(uint16_t data);
+void spi_write_no_check(uint8_t data);
+void spi_write16_no_check(uint16_t data);
 
-extern uint8_t spi_read_8(void);
-extern uint16_t spi_read_16(void);
-extern uint32_t spi_read_24(void);
-extern uint32_t spi_read_32(void);
-extern void spi_read_buf(uint8_t *buf, uint16_t count);
+uint8_t spi_read_8(void);
+uint16_t spi_read_16(void);
+uint32_t spi_read_24(void);
+uint32_t spi_read_32(void);
+void spi_read_buf(uint8_t *buf, uint16_t count);
+
+void spi_device_init(spi_dev_t *spi_dev,
+                     uint8_t cs_num, volatile uint8_t *cs_port,
+                     uint8_t rst_num, volatile uint8_t *rst_port,
+                     uint8_t intr_num, volatile uint8_t *intr_port,
+                     uint8_t a0_num, volatile uint8_t *a0_port);
 
 #endif  /* SPI_H */
