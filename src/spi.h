@@ -11,6 +11,7 @@
 #define SPI_MOSI    PORTB3
 #define SPI_MISO    PORTB4
 #define SPI_SCK     PORTB5
+#define SPI_PORT    &PORTB  // this for Atmega328 and compatible. Not recommended to use
 
 /* SPI Enable */
 #define spi_on() (bit_set(SPCR, SPE))
@@ -55,10 +56,10 @@ uint32_t spi_read_24(void);
 uint32_t spi_read_32(void);
 void spi_read_buf(uint8_t *buf, uint16_t count);
 
-void spi_device_init(spi_dev_t *spi_dev,
-                     uint8_t cs_num, volatile uint8_t *cs_port,
-                     uint8_t rst_num, volatile uint8_t *rst_port,
-                     uint8_t intr_num, volatile uint8_t *intr_port,
-                     uint8_t a0_num, volatile uint8_t *a0_port);
+int8_t spi_device_init(spi_dev_t *spi_dev,
+                       uint8_t cs_num, volatile uint8_t *cs_port,
+                       uint8_t rst_num, volatile uint8_t *rst_port,
+                       uint8_t intr_num, volatile uint8_t *intr_port,
+                       uint8_t a0_num, volatile uint8_t *a0_port);
 
 #endif  /* SPI_H */

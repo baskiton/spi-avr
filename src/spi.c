@@ -17,8 +17,8 @@ void spi_init(void) {
     cli();  // Protect from a scheduler
 
     /* Set ~SS as output and HIGH (deselect) */
-    set_output(DDRB, SPI_SS);
-    bit_set(PORTB, SPI_SS);
+    set_output(*(SPI_PORT - 1), SPI_SS);
+    bit_set(*SPI_PORT, SPI_SS);
     
     /* Warning: if the SS pin ever becomes a LOW INPUT then SPI
     automatically switches to Slave, so the data direction of
@@ -346,7 +346,7 @@ inline void spi_read_buf(uint8_t *buf, uint16_t count) {
 /*!
  * @brief Initialize a new SPI device
  * @param cs_num Chip Select (SS) pin number
- * @param cs_port Chip Select port pointer
+ * @param cs_port Chip Select port pointer. If NULL set by default
  * @param rst_num Reset (RST) pin number
  * @param rst_port Reset port pointer
  * @param intr_num Interrupt input signal pin number
@@ -354,28 +354,34 @@ inline void spi_read_buf(uint8_t *buf, uint16_t count) {
  * @param a0_num Advanced pin number
  * @param a0_port Advanced port pointer
  */
-void spi_device_init(spi_dev_t *spi_dev,
-                     uint8_t cs_num, volatile uint8_t *cs_port,
-                     uint8_t rst_num, volatile uint8_t *rst_port,
-                     uint8_t intr_num, volatile uint8_t *intr_port,
-                     uint8_t a0_num, volatile uint8_t *a0_port) {
+int8_t spi_device_init(spi_dev_t *spi_dev,
+                       uint8_t cs_num, volatile uint8_t *cs_port,
+                       uint8_t rst_num, volatile uint8_t *rst_port,
+                       uint8_t intr_num, volatile uint8_t *intr_port,
+                       uint8_t a0_num, volatile uint8_t *a0_port) {
+    if (!cs_port) {
+        cs_port = SPI_PORT;
+        cs_num = SPI_SS;
+    }
     spi_dev->cs.pin_num = cs_num;
     spi_dev->cs.port = cs_port;
+    set_output(*(cs_port - 1), cs_num);
+    chip_desel(spi_dev->cs);
+    
     spi_dev->rst.pin_num = rst_num;
     spi_dev->rst.port = rst_port;
+    if (rst_port)
+        set_output(*(rst_port - 1), rst_num);
+    
     spi_dev->intr.pin_num = intr_num;
     spi_dev->intr.port = intr_port;
+    if (intr_port)
+        set_input(*(intr_port - 1), intr_num);
+    
     spi_dev->a0.pin_num = a0_num;
     spi_dev->a0.port = a0_port;
-
-    chip_desel(spi_dev->cs);
-
-    if (!cs_port)
-        set_output(*(cs_port - 1), cs_num);
-    if (!rst_port)
-        set_output(*(rst_port - 1), rst_num);
-    if (!intr_port)
-        set_input(*(intr_port - 1), intr_num);
-    if (!a0_port)
+    if (a0_port)
         set_output(*(a0_port - 1), a0_num);
+    
+    return 0;
 }
