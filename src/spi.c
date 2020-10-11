@@ -353,12 +353,13 @@ inline void spi_read_buf(uint8_t *buf, uint16_t count) {
  * @param intr_port Interrupt input signal port pointer
  * @param a0_num Advanced pin number
  * @param a0_port Advanced port pointer
+ * @return 0 if success; errno if error
  */
-int8_t spi_device_init(spi_dev_t *spi_dev,
-                       uint8_t cs_num, volatile uint8_t *cs_port,
-                       uint8_t rst_num, volatile uint8_t *rst_port,
-                       uint8_t intr_num, volatile uint8_t *intr_port,
-                       uint8_t a0_num, volatile uint8_t *a0_port) {
+int8_t spi_device_register(spi_dev_t *spi_dev,
+                           uint8_t cs_num, volatile uint8_t *cs_port,
+                           uint8_t rst_num, volatile uint8_t *rst_port,
+                           uint8_t intr_num, volatile uint8_t *intr_port,
+                           uint8_t a0_num, volatile uint8_t *a0_port) {
     if (!cs_port) {
         cs_port = SPI_PORT;
         cs_num = SPI_SS;

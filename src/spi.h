@@ -29,6 +29,7 @@ typedef struct spi_device_s {
     struct avr_pin_s rst;   // reset
     struct avr_pin_s intr;  // interrupt
     struct avr_pin_s a0;    // a0
+    void *priv_data;    // device private data pointer
 } spi_dev_t;
 
 /* One SPI Clock pulse */
@@ -56,10 +57,10 @@ uint32_t spi_read_24(void);
 uint32_t spi_read_32(void);
 void spi_read_buf(uint8_t *buf, uint16_t count);
 
-int8_t spi_device_init(spi_dev_t *spi_dev,
-                       uint8_t cs_num, volatile uint8_t *cs_port,
-                       uint8_t rst_num, volatile uint8_t *rst_port,
-                       uint8_t intr_num, volatile uint8_t *intr_port,
-                       uint8_t a0_num, volatile uint8_t *a0_port);
+int8_t spi_device_register(spi_dev_t *spi_dev,
+                           uint8_t cs_num, volatile uint8_t *cs_port,
+                           uint8_t rst_num, volatile uint8_t *rst_port,
+                           uint8_t intr_num, volatile uint8_t *intr_port,
+                           uint8_t a0_num, volatile uint8_t *a0_port);
 
 #endif  /* SPI_H */
