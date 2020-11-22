@@ -1,6 +1,6 @@
 {
     "name": "SPI",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "description": "This library allows communication with SPI devices. Only for Atmega328p or compatible",
     "keywords": "avr, baskiton, spi",
     "repository":
@@ -18,9 +18,8 @@
         }
     ],
     "license": "MIT",
-    "frameworks": ["arduino"],
     "platforms": ["atmelavr"],
     "dependencies": {
-        "defines-avr": "^1.2.0"
+        "defines-avr": "^1.2.1"
     }
 }
