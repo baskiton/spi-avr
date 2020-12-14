@@ -218,7 +218,7 @@ inline void spi_write16_no_check(uint16_t data) {
  */
 inline uint8_t spi_read_8(void) {
     uint8_t result;
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result = SPDR;
@@ -239,12 +239,12 @@ inline uint16_t spi_read_16(void) {
         };
     } result;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.msb = SPDR;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.lsb = SPDR;
@@ -269,17 +269,17 @@ inline uint32_t spi_read_24(void) {
 
     result.msb = 0;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.mlsb = SPDR;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.lmsb = SPDR;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.lsb = SPDR;
@@ -302,22 +302,22 @@ inline uint32_t spi_read_32(void) {
         };
     } result;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.msb = SPDR;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.mlsb = SPDR;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.lmsb = SPDR;
 
-    SPDR = 0;
+    SPDR = 0xFF;
     nop();
     while (!(SPSR & _BV(SPIF)));
     result.lsb = SPDR;
@@ -336,7 +336,7 @@ inline void spi_read_buf(uint8_t *buf, uint16_t count) {
 
     uint8_t *ptr = buf;
     for (uint16_t i = 0; i < count; i++) {
-        SPDR = 0;
+        SPDR = 0xFF;
         nop();
         while (!(SPSR & _BV(SPIF)));
         *ptr++ = SPDR;

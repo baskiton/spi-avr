@@ -19,10 +19,19 @@
 /* SPI Disable */
 #define spi_off() (bit_clear(SPCR, SPE))
 
+static uint8_t spi_sreg;
+
 /* Select the specific SPI device. CS - spi_dev_t.cs */
-#define chip_select(cs) (bit_clear(*((cs).port), (cs).pin_num))
+static inline void chip_select(struct avr_pin_s cs) {
+    spi_sreg = SREG;
+    cli();
+    bit_clear(*cs.port, cs.pin_num);
+}
 /* Deselect the specific SPI device. CS - spi_dev_t.cs */
-#define chip_desel(cs) (bit_set(*((cs).port), (cs).pin_num))
+static inline void chip_desel(struct avr_pin_s cs) {
+    bit_set(*cs.port, cs.pin_num);
+    SREG = spi_sreg;
+}
 
 typedef struct spi_device_s {
     struct avr_pin_s cs;    // chip select
