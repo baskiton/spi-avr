@@ -2,6 +2,7 @@
 #define SPI_H
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 #include <stdint.h>
 
@@ -13,33 +14,49 @@
 #define SPI_SCK     PORTB5
 #define SPI_PORT    &PORTB  // this for Atmega328 and compatible. Not recommended to use
 
+static uint8_t spi_sreg;
+
 /* SPI Enable */
 #define spi_on() (bit_set(SPCR, SPE))
 
 /* SPI Disable */
 #define spi_off() (bit_clear(SPCR, SPE))
 
-static uint8_t spi_sreg;
-
-/* Select the specific SPI device. CS - spi_dev_t.cs */
-static inline void chip_select(struct avr_pin_s cs) {
-    spi_sreg = SREG;
-    cli();
-    bit_clear(*cs.port, cs.pin_num);
-}
-/* Deselect the specific SPI device. CS - spi_dev_t.cs */
-static inline void chip_desel(struct avr_pin_s cs) {
-    bit_set(*cs.port, cs.pin_num);
-    SREG = spi_sreg;
-}
-
 typedef struct spi_device_s {
     struct avr_pin_s cs;    // chip select
     struct avr_pin_s rst;   // reset
     struct avr_pin_s intr;  // interrupt
     struct avr_pin_s a0;    // a0
-    void *priv_data;    // device private data pointer
+    void *priv_data;        // device private data pointer
 } spi_dev_t;
+
+/*!
+ * @brief Set private data to SPI device
+ */
+static inline void spi_set_priv(spi_dev_t *spi_dev, void *data) {
+    spi_dev->priv_data = data;
+}
+
+/*!
+ * @brief Get pointer to private data
+ * @return Pointer to data
+ */
+static inline void *spi_get_priv(spi_dev_t *spi_dev) {
+    return spi_dev->priv_data;
+}
+
+/* Select the specific SPI device. CS - spi_dev_t->cs */
+static inline void chip_select(struct avr_pin_s *cs) {
+    spi_sreg = SREG;
+    cli();
+    bit_clear(*cs->port, cs->pin_num);
+}
+
+/* Deselect the specific SPI device. CS - spi_dev_t->cs */
+static inline void chip_desel(struct avr_pin_s *cs) {
+    bit_set(*cs->port, cs->pin_num);
+    SREG = spi_sreg;
+}
 
 /* One SPI Clock pulse */
 inline void spi_pulse(void) {

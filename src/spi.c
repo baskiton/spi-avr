@@ -367,22 +367,22 @@ int8_t spi_device_register(spi_dev_t *spi_dev,
     spi_dev->cs.pin_num = cs_num;
     spi_dev->cs.port = cs_port;
     set_output(*(cs_port - 1), cs_num);
-    chip_desel(spi_dev->cs);
-    
+    chip_desel(&spi_dev->cs);
+
     spi_dev->rst.pin_num = rst_num;
     spi_dev->rst.port = rst_port;
     if (rst_port)
         set_output(*(rst_port - 1), rst_num);
-    
+
     spi_dev->intr.pin_num = intr_num;
     spi_dev->intr.port = intr_port;
     if (intr_port)
         set_input(*(intr_port - 1), intr_num);
-    
+
     spi_dev->a0.pin_num = a0_num;
     spi_dev->a0.port = a0_port;
     if (a0_port)
         set_output(*(a0_port - 1), a0_num);
-    
+
     return 0;
 }
